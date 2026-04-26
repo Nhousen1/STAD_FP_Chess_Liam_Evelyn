@@ -1,0 +1,20 @@
+# Build output
+target/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Maven wrapper
+.mvn/
+
+# Editor backup files
+*~
+*.swp

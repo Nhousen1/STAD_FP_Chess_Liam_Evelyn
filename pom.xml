@@ -23,20 +23,164 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+          <!-- Source files use Latin-1 (non-UTF-8 chars in OpeningLibrary.java) -->
+          <encoding>ISO-8859-1</encoding>
+        </configuration>
+      </plugin>
+      <!-- Surefire: headless JavaFX via Monocle, no display required -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.2</version>
+        <configuration>
+          <argLine>
+            ${argLine}
+            --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+            --add-opens javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
+            --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+            -Dglass.platform=Monocle
+            -Dmonocle.platform=Headless
+            -Dprism.order=sw
+            -Dprism.text=t2k
+            -Dtestfx.robot=glass
+            -Dtestfx.headless=true
+            -Djava.awt.headless=true
+          </argLine>
+        </configuration>
+      </plugin>
+      <!-- JaCoCo: code coverage reports -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.11</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals><goal>prepare-agent</goal></goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals><goal>report</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- PITest: mutation testing -->
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.9.11</version>
+        <configuration>
+          <!-- Target core chess logic; exclude JavaFX UI and untestable classes -->
+          <targetClasses>
+            <param>com.chess.model.*</param>
+            <param>com.chess.root.*</param>
+            <param>com.chess.root.moves.*</param>
+            <param>com.chess.root.pieces.*</param>
+          </targetClasses>
+          <excludedClasses>
+            <!-- AIThread uses concurrency not exercised by black-box tests -->
+            <param>com.chess.root.AIThread</param>
+            <!-- OpeningLibrary is a large static data table, not logic -->
+            <param>com.chess.model.OpeningLibrary</param>
+          </excludedClasses>
+          <targetTests>
+            <param>com.chess.blackbox.*</param>
+            <param>com.chess.mutation.*</param>
+          </targetTests>
+          <excludedTests>
+            <!-- Whitebox tests construct boards with 64 JavaFX FieldButtons each;
+                 PITest's forked JVMs run out of heap (OOM) when running 300+ such
+                 tests per mutation batch. Whitebox tests still run under mvn test. -->
+            <!-- GUITesting launches the full JavaFX UI; not suitable for mutation -->
+            <param>com.chess.GUITesting.*</param>
+          </excludedTests>
+          <!-- Pass the same headless JavaFX args that surefire uses -->
+          <jvmArgs>
+            <value>-Dglass.platform=Monocle</value>
+            <value>-Dmonocle.platform=Headless</value>
+            <value>-Dprism.order=sw</value>
+            <value>-Dprism.text=t2k</value>
+            <value>-Djava.awt.headless=true</value>
+          </jvmArgs>
+          <!-- STRONGER = DEFAULTS + CONSTRUCTOR_CALLS + INLINE_CONSTS +
+               NON_VOID_METHOD_CALLS + REMOVE_CONDITIONALS -->
+          <mutators>
+            <mutator>STRONGER</mutator>
+          </mutators>
+          <!-- Increase timeout margin for board-construction overhead -->
+          <timeoutFactor>1.5</timeoutFactor>
+          <timeoutConstant>4000</timeoutConstant>
+          <!-- Always write to same directory (no timestamp suffix) -->
+          <timestampedReports>false</timestampedReports>
+          <outputFormats>
+            <outputFormat>HTML</outputFormat>
+            <outputFormat>XML</outputFormat>
+          </outputFormats>
+        </configuration>
+      </plugin>
+      <!-- exec:java — runs the chess GUI from the terminal -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>com.chess.application.Chess</mainClass>
         </configuration>
       </plugin>
     </plugins>
   </build>
   <dependencies>
-  	<dependency>
-        <groupId>org.openjfx</groupId>
-        <artifactId>javafx-controls</artifactId>
-        <version>12.0.1</version>
+    <!-- JavaFX modules required by the SUT -->
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>12.0.1</version>
     </dependency>
     <dependency>
-	  <groupId>junit</groupId>
-	  <artifactId>junit</artifactId>
-	  <version>4.13.1</version>
-	</dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-fxml</artifactId>
+      <version>12.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Monocle: headless JavaFX platform for tests (no display required) -->
+    <dependency>
+      <groupId>org.testfx</groupId>
+      <artifactId>openjfx-monocle</artifactId>
+      <version>jdk-12.0.1+2</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- TestFX: GUI testing framework used by GUITesting/SettingsTest -->
+    <dependency>
+      <groupId>org.testfx</groupId>
+      <artifactId>testfx-core</artifactId>
+      <version>4.0.18</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testfx</groupId>
+      <artifactId>testfx-junit</artifactId>
+      <version>4.0.18</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Mockito inline: allows mocking the final GameController class -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>4.11.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- AssertJ: fluent assertions (used by whitebox/GUI tests) -->
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.24.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
