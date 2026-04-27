@@ -50,7 +50,7 @@ public class AIIntegrationTest extends ChessBaseTest {
     }
 
     // ====================================================================
-    // Difficulty levels: verify getBestMove returns a legal move
+    // Difficulty levels
     // ====================================================================
 
     /**
@@ -68,12 +68,9 @@ public class AIIntegrationTest extends ChessBaseTest {
         // Set delay to 0 for fast tests
         board.setDelay(0);
 
-        // Trigger the AI move directly (no threading)
+        // Trigger the AI move directly
         board.performAIMove();
 
-        // After the AI move at least one of:
-        //  a) move history grew
-        //  b) piece positions changed (checked via FEN comparison)
         boolean historyGrew = board.hasHistory();
         assertTrue("AI should make a move (history should be non-empty)", historyGrew);
 
@@ -84,27 +81,27 @@ public class AIIntegrationTest extends ChessBaseTest {
     }
 
     @Test
-    public void aiMove_suicideDifficulty_makesLegalMove() {
+    public void aiMoveLegalMoveOnSuicideDiff() {
         assertAiMakesLegalMove(Difficulty.SUICIDE, PieceValues.SUICIDE);
     }
 
     @Test
-    public void aiMove_randomDifficulty_makesLegalMove() {
+    public void aiMoveLegalMoveOnRandomDiff() {
         assertAiMakesLegalMove(Difficulty.RANDOM, PieceValues.RANDOM);
     }
 
     @Test
-    public void aiMove_superEasyDifficulty_makesLegalMove() {
+    public void aiMoveLegalMoveOnSuperEasyDiff() {
         assertAiMakesLegalMove(Difficulty.SUPEREASY, PieceValues.SUPEREASY);
     }
 
     @Test
-    public void aiMove_veryEasyDifficulty_makesLegalMove() {
+    public void aiMoveLegalMoveOnVeryEasyDiff() {
         assertAiMakesLegalMove(Difficulty.VERYEASY, PieceValues.VERYEASY);
     }
 
     @Test
-    public void aiMove_easyDifficulty_makesLegalMove() {
+    public void aiMoveLegalMoveOnEasyDiff() {
         assertAiMakesLegalMove(Difficulty.EASY, PieceValues.EASY);
     }
 
@@ -134,15 +131,15 @@ public class AIIntegrationTest extends ChessBaseTest {
         boolean found = legalMovesBefore.stream().anyMatch(m ->
                 m.getPiece().equals(played.getPiece())
                         && m.getField().getNotation().equals(played.getField().getNotation()));
-        assertTrue("AI move should have been present in the set of legal moves", found);
+        assertTrue(found);
     }
 
     // ====================================================================
-    // AI moves update game status (endMove triggers player switch)
+    // AI moves update game status
     // ====================================================================
 
     @Test
-    public void aiMove_afterExecution_moveCounterIncrements() {
+    public void aiMoveCounterIncrements() {
         TestDouble game = aiGame(Difficulty.RANDOM, PieceValues.RANDOM, null);
         Board board = game.getBoard();
         board.setDelay(0);
@@ -152,8 +149,7 @@ public class AIIntegrationTest extends ChessBaseTest {
         Double counterAfter = game.getMoveCounter();
 
         // Each half-move increments counter by 0.5
-        assertEquals("Move counter should increment by 0.5 after AI move",
-                counterBefore + 0.5, counterAfter, 0.001);
+        assertEquals(counterBefore + 0.5, counterAfter, 0.001);
     }
 
     // ====================================================================
@@ -161,8 +157,7 @@ public class AIIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void aiMove_checkmatePosition_doesNotCrash() {
-        // In a checkmate position, performAIMove should do nothing (no moves)
+    public void aiMoveCheckmatePosition() {
         TestDouble game = TestDouble.fromFen(FEN_CHECKMATE_WHITE);
         Board board = game.getBoard();
         board.setDelay(0);
@@ -177,11 +172,11 @@ public class AIIntegrationTest extends ChessBaseTest {
     }
 
     // ====================================================================
-    // AI respects game rules (no moving into check)
+    // AI respects game rules
     // ====================================================================
 
     @Test
-    public void aiMove_neverMovesKingIntoCheck() {
+    public void aiMoveNeverMovesKingIntoCheck() {
         // Repeat AI moves N times and verify king is never in check after each AI move
         TestDouble game = aiGame(Difficulty.RANDOM, PieceValues.RANDOM, null);
         Board board = game.getBoard();
@@ -196,8 +191,6 @@ public class AIIntegrationTest extends ChessBaseTest {
 
             boolean kingInCheck = board.isPieceEndangered(whiteKing, board.getPieces(true));
             // After the AI's own move, the AI's king should not be in check
-            // (this is guaranteed by validateBoard's legal-move filtering)
-            // We test by confirming the AI actually moved legally
             assertFalse("After AI move, white king must not be in self-inflicted check",
                     kingInCheck && board.hasHistory() && i == 0);
         }
@@ -208,7 +201,7 @@ public class AIIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void difficulty_treeDepths_increasingWithLevel() {
+    public void difficultyTreeDepthsIncreasingWithLevel() {
         // Higher levels should have >= tree depth than lower levels
         assertTrue(Difficulty.EASY.tree() >= Difficulty.SUPEREASY.tree());
         assertTrue(Difficulty.MEDIUM.tree() >= Difficulty.EASY.tree());
@@ -216,13 +209,13 @@ public class AIIntegrationTest extends ChessBaseTest {
     }
 
     @Test
-    public void difficulty_openingLibrary_enabledOnlyForHighDifficulty() {
+    public void difficultyOpeningLibraryForHighDifficulty() {
         assertFalse("EASY should not use opening library", Difficulty.EASY.opening());
         assertTrue("HARDER should use opening library", Difficulty.HARDER.opening());
     }
 
     @Test
-    public void difficulty_spasmValues_randomHasLowestSpasm() {
+    public void difficultySpasmValuesRandomHasLowestSpasm() {
         // RANDOM uses spasm=1 (always random move)
         assertEquals(1, Difficulty.RANDOM.spasm());
     }
