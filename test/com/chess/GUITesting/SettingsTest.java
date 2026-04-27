@@ -17,8 +17,6 @@ import static org.testfx.matcher.control.LabeledMatchers.hasText;
  * Each test starts the full Chess application via ApplicationTest.start(),
  * which loads SettingsFrame.fxml exactly as it does in production.
  *
- * TestFX runs headless via Monocle when the JVM args in pom.xml are present:
- *   -Dtestfx.headless=true  -Dprism.order=sw  -Dglass.platform=Monocle
  */
 public class SettingsTest extends ApplicationTest {
 

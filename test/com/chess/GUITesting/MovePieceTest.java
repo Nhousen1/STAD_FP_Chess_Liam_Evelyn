@@ -29,7 +29,7 @@ public class MovePieceTest extends ApplicationTest {
         new Chess().start(stage);
     }
 
-    // ------------------------------------------------------------------ helpers
+    // Helpers
 
     private void startManualGame() {
         clickOn("#modeChoice");
@@ -52,7 +52,7 @@ public class MovePieceTest extends ApplicationTest {
     }
 
     private void startAiGame() {
-        // MANUAL_VS_AI: white is human, black is AI (default color = white)
+        // MANUAL_VS_AI: white is human, black is AI
         clickOn("#startButton");
         sleep(800);
     }
@@ -133,7 +133,7 @@ public class MovePieceTest extends ApplicationTest {
     public void clickEmptySquareNoPieceSelected() {
         startManualGame();
 
-        // Click an empty square first (e4 is empty at start)
+        // Click an empty square first
         clickOn(getSquare(4, 4)); // e4 - empty
         sleep(200);
         // Nothing should happen, board unchanged
@@ -147,10 +147,8 @@ public class MovePieceTest extends ApplicationTest {
     @Test
     public void captureVictimSquareChangesOwner() {
         // Use a FEN where white rook can immediately capture black pawn
-        // White rook a1, black pawn a7, kings elsewhere
         startManualGameWithFen("k7/p7/8/8/8/8/8/R6K w - - 0 1");
 
-        // Rook on a1 (col=0, row=7) → a7 (col=0, row=1)
         assertTrue("a1 should have white rook", hasPiece(0, 7));
         assertTrue("a7 should have black pawn", hasPiece(0, 1));
 
@@ -194,13 +192,7 @@ public class MovePieceTest extends ApplicationTest {
         // Default mode = MANUAL_VS_AI, white is human
         startAiGame();
 
-        // Count pieces before white's move
         GridPane grid = lookup("#boardGrid").query();
-        long piecesBefore = grid.getChildren().stream()
-                .filter(n -> n instanceof FieldButton)
-                .map(n -> (FieldButton) n)
-                .filter(fb -> fb.getGraphic() != null)
-                .count();
 
         // Make white's first move: e2 → e4
         clickOn(getSquare(4, 6));
@@ -222,7 +214,6 @@ public class MovePieceTest extends ApplicationTest {
     public void aiPieceChangesPosition() {
         startAiGame();
 
-        // Snapshot piece positions before white moves
         GridPane grid = lookup("#boardGrid").query();
 
         // Make white's move
@@ -231,8 +222,6 @@ public class MovePieceTest extends ApplicationTest {
         clickOn(getSquare(4, 4)); // e4
         sleep(2000);   // wait for AI
 
-        // At least one black piece should have moved from its starting row
-        // Row 1 = black pawns' start; after AI moves one should be gone
         long blackPawnsOnRow1 = grid.getChildren().stream()
                 .filter(n -> n instanceof FieldButton)
                 .map(n -> (FieldButton) n)

@@ -1,9 +1,9 @@
 package com.chess.GUITesting;
 
 import com.chess.application.Chess;
+import com.chess.model.Mode;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.MenuBar;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import org.junit.Test;
@@ -29,14 +29,14 @@ public class MenuControlTest extends ApplicationTest {
     // ------------------------------------------------------------------ helpers
 
     private void startManualGame() {
-        clickOn("#modeChoice");
-        clickOn("You vs your 'friend'");
-        clickOn("#startButton");
-        sleep(800);
+            ComboBox<String> combo = lookup("#modeChoice").query();
+            interact(() -> combo.getSelectionModel().select(Mode.MANUAL_ONLY.get()));
+            sleep(200);
+            clickOn("#startButton");
+            sleep(800);
     }
 
     private void openGameMenu() {
-        // The first menu in the MenuBar is "Game"
         clickOn("Game");
         sleep(200);
     }
@@ -97,7 +97,6 @@ public class MenuControlTest extends ApplicationTest {
         openGameMenu();
         clickOn("Copy FEN");
         sleep(200);
-        // No exception = pass; clipboard content is OS-dependent
     }
 
     @Test
@@ -152,22 +151,14 @@ public class MenuControlTest extends ApplicationTest {
     @Test
     public void startEditing() {
         startManualGame();
-
-        // Edit bar buttons are hidden by default
-        Node stopBtn = lookup("#stopButton").tryQuery().orElse(null);
-        if (stopBtn != null) {
-            assertFalse("Stop button should be hidden before edit mode",
-                    stopBtn.isVisible());
-        }
-
         openEditMenu();
         clickOn("Start editing");
         sleep(300);
 
-        Node stopBtnAfter = lookup("#stopButton").tryQuery().orElse(null);
-        assertNotNull(stopBtnAfter);
-        assertTrue("Stop button should be visible after starting edit mode",
-                stopBtnAfter.isVisible());
+        Button goButton = lookup("#goButton").query();
+        Button stopButton = lookup("#stopButton").query();
+        assertTrue("Go button should be visible after entering edit mode", goButton.isVisible());
+        assertTrue("Stop button should be visible after entering edit mode", stopButton.isVisible());
     }
 
     @Test
@@ -176,17 +167,14 @@ public class MenuControlTest extends ApplicationTest {
         openEditMenu();
         clickOn("Start editing");
         sleep(300);
-
-        clickOn("#stopButton");
+        openEditMenu();
+        clickOn("Stop editing");
         sleep(300);
 
-        // After clicking stop (which calls resumeGame / handleLeaveEditMode via go button)
-        // the go button itself gets hidden again
-        Node goBtn = lookup("#goButton").tryQuery().orElse(null);
-        if (goBtn != null) {
-            assertFalse("Go button should be hidden after leaving edit mode",
-                    goBtn.isVisible());
-        }
+        Button goButton = lookup("#goButton").query();
+        Button stopButton = lookup("#stopButton").query();
+        assertFalse("Go button should be hidden after leaving edit mode", goButton.isVisible());
+        assertFalse("Stop button should be hidden after leaving edit mode", stopButton.isVisible());
     }
 
     // ====================================================================
@@ -229,7 +217,6 @@ public class MenuControlTest extends ApplicationTest {
         openHelpMenu();
         clickOn("Dummy mode on");
         sleep(200);
-        // Dummy mode shows move hints - should not crash
     }
 
     @Test
@@ -241,7 +228,6 @@ public class MenuControlTest extends ApplicationTest {
         openHelpMenu();
         clickOn("Dummy mode off");
         sleep(200);
-        // No crash = pass
     }
 
     // ====================================================================

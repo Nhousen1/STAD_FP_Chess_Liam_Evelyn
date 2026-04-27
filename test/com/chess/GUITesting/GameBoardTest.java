@@ -129,7 +129,6 @@ public class GameBoardTest extends ApplicationTest {
         GridPane grid = lookup("#boardGrid").query();
         assertNotNull(grid);
 
-        // Click e2 pawn (column 4, row 6 in grid = square "e2")
         Node e2 = getSquare(grid, 4, 6);
         Node e4 = getSquare(grid, 4, 4);
         assertNotNull(e2);
@@ -147,19 +146,26 @@ public class GameBoardTest extends ApplicationTest {
     // Check Board State
     // ====================================================================
 
+    private void makeMove(GridPane grid, int fromCol, int fromRow, int toCol, int toRow) {
+        clickOn(getSquare(grid,fromCol, fromRow));
+        sleep(200);
+        clickOn(getSquare(grid, toCol, toRow));
+        sleep(300);
+    }
+
     @Test
     public void boardStatusShowsCheck() {
-        // Load a position where white is already in check
-        // Black queen on h4 gives check to white king
-        startGameWithFen("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3");
+        // Load a position right before check
+        startGameWithFen("r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1");
+        sleep(500);
+
+        GridPane grid = lookup("#boardGrid").query();
+        makeMove(grid, 2, 4, 5, 1); // Creates check situation
         sleep(500);
 
         Label statusLabel = lookup("#statusTextLabel").query();
         assertNotNull(statusLabel);
-        // The board will call setDisplay("CHECK by black player") or end the game
-        // Either way the status text should be non-empty
-        assertFalse("Status label should not be blank in check/checkmate position",
-                statusLabel.getText().isEmpty());
+        assertEquals("CHECK by white player", statusLabel.getText());
     }
 
     // ====================================================================
@@ -168,13 +174,17 @@ public class GameBoardTest extends ApplicationTest {
 
     @Test
     public void boardStatusShowsCheckmate() {
-        startGameWithFen("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3");
+        // Load a position right before checkmate
+        startGameWithFen("r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1");
+        sleep(500);
+
+        GridPane grid = lookup("#boardGrid").query();
+        makeMove(grid, 7, 3, 5, 1); // Creates checkmate situation
         sleep(500);
 
         Label statusLabel = lookup("#statusTextLabel").query();
         assertNotNull(statusLabel);
-        assertTrue("Status should mention CHECKMATE",
-                statusLabel.getText().toUpperCase().contains("CHECKMATE"));
+        assertEquals("CHECKMATE by white player!", statusLabel.getText());
     }
 
     // ====================================================================
@@ -183,13 +193,17 @@ public class GameBoardTest extends ApplicationTest {
 
     @Test
     public void boardStatusShowsStalemate() {
-        startGameWithFen("5bnr/4p1pq/4Qpkr/7p/7P/2N5/PPPPPP2/R1BQKBNR b KQ - 0 10");
+        // Load position right before stalemate
+        startGameWithFen("7k/8/4Q3/8/4K3/8/8/8");
+        sleep(500);
+
+        GridPane grid = lookup("#boardGrid").query();
+        makeMove(grid,  4, 2, 5, 1); // Creates checkmate situation
         sleep(500);
 
         Label statusLabel = lookup("#statusTextLabel").query();
         assertNotNull(statusLabel);
-        assertTrue("Status should mention STALEMATE",
-                statusLabel.getText().toUpperCase().contains("STALEMATE"));
+        assertEquals("STALEMATE!", statusLabel.getText());
     }
 
     // ====================================================================
