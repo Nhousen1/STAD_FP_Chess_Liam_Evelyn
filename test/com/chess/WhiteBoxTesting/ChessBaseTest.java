@@ -123,20 +123,6 @@ public abstract class ChessBaseTest {
         return s;
     }
 
-    // ------------------------------------------------------------------ Board accessors
-
-    /** Find a piece by its FEN character on the given board (case-sensitive). */
-    public static Piece findPiece(Board board, String fenChar) {
-        for (int col = 0; col < 8; col++) {
-            for (int row = 0; row < 8; row++) {
-                Field f = board.getField(col, row);
-                if (f.getPiece() != null && fenChar.equals(f.getPiece().getFen())) {
-                    return f.getPiece();
-                }
-            }
-        }
-        return null;
-    }
 
     /** Return the piece at algebraic notation square (e.g. "e2"). */
     public static Piece pieceAt(Board board, String notation) {
@@ -151,34 +137,10 @@ public abstract class ChessBaseTest {
         return null;
     }
 
-    /** Return the field at algebraic notation square (e.g. "e4"). */
-    public static Field fieldAt(Board board, String notation) {
-        for (int col = 0; col < 8; col++) {
-            for (int row = 0; row < 8; row++) {
-                Field f = board.getField(col, row);
-                if (notation.equals(f.getNotation())) {
-                    return f;
-                }
-            }
-        }
-        return null;
-    }
-
     /** Return the first move that targets the given field notation. */
     public static Move findMove(List<Move> moves, String targetNotation) {
         for (Move m : moves) {
             if (targetNotation.equals(m.getField().getNotation())) {
-                return m;
-            }
-        }
-        return null;
-    }
-
-    /** Return the first move whose piece sits on startNotation and targets targetNotation. */
-    public static Move findMove(List<Move> moves, String startNotation, String targetNotation) {
-        for (Move m : moves) {
-            if (startNotation.equals(m.getStartField().getNotation())
-                    && targetNotation.equals(m.getField().getNotation())) {
                 return m;
             }
         }
