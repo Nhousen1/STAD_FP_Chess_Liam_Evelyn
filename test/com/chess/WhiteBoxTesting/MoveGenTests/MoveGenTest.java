@@ -13,7 +13,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for move generation for each piece type.
+ * White-box tests for move generation for each piece type.
  *
  * Strategy (from proposal):
  *   "Test each individual move for each piece setting up minimal board states
@@ -30,7 +30,7 @@ public class MoveGenTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void pawn_openingSquare_canAdvanceOneOrTwo() {
+    public void pawnOpeningSquare() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
 
@@ -50,9 +50,8 @@ public class MoveGenTest extends ChessBaseTest {
     }
 
     @Test
-    public void pawn_blockedByFriendlyPiece_noMoves() {
-        // Place white pawn on e2 with another white piece on e3 – no advances possible
-        // FEN: white pawn e2, white rook e3, kings on a1/h8
+    public void pawnBlockedByFriendlyPiece() {
+        // White pawn on e2 with another white piece on e3 – no advances possible
         String fen = "7k/8/8/8/8/4R3/4P3/K7 w - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
         Board board = game.getBoard();
@@ -60,11 +59,11 @@ public class MoveGenTest extends ChessBaseTest {
         Piece pawn = pieceAt(board, "e2");
         assertNotNull(pawn);
         List<Move> moves = pawn.getMoves();
-        assertTrue("Pawn blocked by friendly rook should have no forward moves", moves.isEmpty());
+        assertTrue(moves.isEmpty());
     }
 
     @Test
-    public void pawn_canCaptureDiagonally() {
+    public void pawnCanCaptureDiagonally() {
         // White pawn on e4, black pawns on d5 and f5
         String fen = "7k/8/8/3p1p2/4P3/8/8/K7 w - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
@@ -76,12 +75,12 @@ public class MoveGenTest extends ChessBaseTest {
 
         boolean captureD5 = moves.stream().anyMatch(m -> "d5".equals(m.getField().getNotation()));
         boolean captureF5 = moves.stream().anyMatch(m -> "f5".equals(m.getField().getNotation()));
-        assertTrue("Pawn should capture on d5", captureD5);
-        assertTrue("Pawn should capture on f5", captureF5);
+        assertTrue(captureD5);
+        assertTrue(captureF5);
     }
 
     @Test
-    public void pawn_onPromotionRank_generatesPromotionMove() {
+    public void pawnPromotionRank() {
         TestDouble game = TestDouble.fromFen(FEN_PROMOTION);
         Board board = game.getBoard();
 
@@ -96,7 +95,7 @@ public class MoveGenTest extends ChessBaseTest {
     }
 
     @Test
-    public void pawn_enPassant_generatesPassingMove() {
+    public void pawnEnPassant() {
         TestDouble game = TestDouble.fromFen(FEN_EN_PASSANT);
         Board board = game.getBoard();
 
@@ -115,7 +114,7 @@ public class MoveGenTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void knight_centerOfBoard_hasEightMoves() {
+    public void knightAtCenterOfBoard() {
         TestDouble game = TestDouble.fromFen(FEN_KNIGHT_ONLY);
         Board board = game.getBoard();
 
@@ -128,7 +127,7 @@ public class MoveGenTest extends ChessBaseTest {
     }
 
     @Test
-    public void knight_cornerSquare_hasTwoMoves() {
+    public void knightCornerSquare() {
         // White knight on a1
         String fen = "7k/8/8/8/8/8/8/N6K w - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
@@ -141,7 +140,7 @@ public class MoveGenTest extends ChessBaseTest {
     }
 
     @Test
-    public void knight_startPosition_hasCorrectMoves() {
+    public void knightStartPosition() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
 
@@ -149,7 +148,6 @@ public class MoveGenTest extends ChessBaseTest {
         Piece knight = pieceAt(board, "g1");
         assertNotNull(knight);
         List<Move> moves = knight.getMoves();
-        // From g1 a knight can go to f3 or h3 (e2 and h2 are occupied by pawns)
         assertEquals("Knight on g1 should have 2 moves in starting position", 2, moves.size());
     }
 
@@ -158,7 +156,7 @@ public class MoveGenTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void bishop_openDiagonals_generatesCorrectMoves() {
+    public void bishopOpenDiagonals_() {
         // White bishop on c1, empty board except kings
         TestDouble game = TestDouble.fromFen(FEN_BISHOP_ONLY);
         Board board = game.getBoard();
@@ -173,7 +171,7 @@ public class MoveGenTest extends ChessBaseTest {
     }
 
     @Test
-    public void bishop_blockedByFriendly_cannotPassThrough() {
+    public void bishopBlockedByFriendlyPiece() {
         // Bishop on c1 with white pawn on d2 – only one diagonal open
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
@@ -190,7 +188,7 @@ public class MoveGenTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void rook_openRank_canSlideFull() {
+    public void rookOpenRank() {
         TestDouble game = TestDouble.fromFen(FEN_ROOK_ONLY);
         Board board = game.getBoard();
 
@@ -200,14 +198,12 @@ public class MoveGenTest extends ChessBaseTest {
 
         List<Move> moves = rook.getMoves();
         // Rook on a1 can go to a2-a7 (7 squares up) and b1-g1 (6 squares right)
-        // but a8 is blocked by... no, nothing - kings are elsewhere
-        assertFalse("Rook should have rank/file moves", moves.isEmpty());
-        // At minimum 13 squares reachable from a1 on an open board
+        assertFalse(moves.isEmpty());
         assertTrue("Rook on open board should have at least 13 moves", moves.size() >= 13);
     }
 
     @Test
-    public void rook_startPosition_noMoves() {
+    public void rookStartPosition() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
 
@@ -222,7 +218,7 @@ public class MoveGenTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void queen_openBoard_hasManyMoves() {
+    public void queenOpenBoard() {
         TestDouble game = TestDouble.fromFen(FEN_QUEEN_ONLY);
         Board board = game.getBoard();
 
@@ -231,13 +227,11 @@ public class MoveGenTest extends ChessBaseTest {
         assertTrue(queen instanceof QueenPiece);
 
         List<Move> moves = queen.getMoves();
-        // Queen on d4 of an empty board – 27 reachable squares
-        // (allow some margin for kings blocking a few)
         assertTrue("Queen on near-empty board should have many moves", moves.size() >= 20);
     }
 
     @Test
-    public void queen_startPosition_noMoves() {
+    public void queenStartPosition() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
 
@@ -252,7 +246,7 @@ public class MoveGenTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void king_centerOpenBoard_hasEightMoves() {
+    public void kingCenterOpenBoard() {
         // White king on e4, only black king far away
         String fen = "k7/8/8/8/4K3/8/8/8 w - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
@@ -267,20 +261,19 @@ public class MoveGenTest extends ChessBaseTest {
     }
 
     @Test
-    public void king_cornerPosition_hasTwoOrThreeMoves() {
+    public void kingCornerPosition() {
         TestDouble game = TestDouble.fromFen(FEN_KINGS_ONLY);
         Board board = game.getBoard();
 
         Piece king = pieceAt(board, "a1");
         assertNotNull(king);
         List<Move> moves = king.getMoves();
-        // King on a1: can go to a2, b2, b1 = 3 squares; but some may be controlled
-        // by other king – raw getMoves() before validation returns 3
+        // King on a1: can go to a2, b2, b1 = 3 squares
         assertTrue("King on a1 should have 2-3 raw moves", moves.size() >= 2);
     }
 
     @Test
-    public void king_castlingMoves_availableWhenConditionsMet() {
+    public void kingCastlingMoves() {
         TestDouble game = TestDouble.fromFen(FEN_CASTLING_AVAILABLE);
         Board board = game.getBoard();
 
@@ -292,7 +285,7 @@ public class MoveGenTest extends ChessBaseTest {
     }
 
     @Test
-    public void king_afterMoving_castlingNotAvailable() {
+    public void kingAfterMoving() {
         TestDouble game = TestDouble.fromFen(FEN_CASTLING_AVAILABLE);
         Board board = game.getBoard();
 
