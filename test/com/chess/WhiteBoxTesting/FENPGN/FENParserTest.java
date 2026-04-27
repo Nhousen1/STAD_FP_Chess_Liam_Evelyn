@@ -5,26 +5,26 @@ import com.chess.WhiteBoxTesting.TestDouble;
 import com.chess.root.FenParser;
 import org.junit.Test;
 
+import java.util.LinkedList;
+
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for {@link FenParser}.
+ * White-box tests for FenParser.
  *
  * Strategy (from proposal):
  *   "Test FEN parser by checking that exported FEN strings match the original
  *    strings using the LOAD option."
  *
- * All tests are headless – they exercise static parse/build helpers directly
- * without constructing a Board or Game.
  */
 public class FENParserTest extends ChessBaseTest {
 
     // ====================================================================
-    // parseBoard – converts the board segment of a FEN into a 2-D array
+    // parseBoard – Branch Coverage
     // ====================================================================
 
     @Test
-    public void parseBoard_startPosition_returnsPiecesAtCorrectCells() {
+    public void parseBoardStartPosition() {
         String boardStr = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
         String[][] board = FenParser.parseBoard(boardStr);
 
@@ -38,7 +38,7 @@ public class FENParserTest extends ChessBaseTest {
     }
 
     @Test
-    public void parseBoard_emptyRows_allNulls() {
+    public void parseBoardEmptyRows() {
         String boardStr = "8/8/8/8/8/8/8/8";
         String[][] board = FenParser.parseBoard(boardStr);
 
@@ -50,7 +50,7 @@ public class FENParserTest extends ChessBaseTest {
     }
 
     @Test
-    public void parseBoard_singlePiece_onlyThatCellFilled() {
+    public void parseBoardSinglePiece() {
         // White king on e1 only
         String boardStr = "8/8/8/8/8/8/8/4K3";
         String[][] board = FenParser.parseBoard(boardStr);
@@ -66,17 +66,44 @@ public class FENParserTest extends ChessBaseTest {
         }
     }
 
+    @Test
+    public void parseBoardSingleEmptyCell() {
+        String[][] board = FenParser.parseBoard("1r6/8/8/8/8/8/8/8");
+        assertNull(board[0][0]);
+        assertEquals("r", board[1][0]);
+    }
+
+    @Test
+    public void parseBoardColOverflow() {
+        try {
+            String[][] board = FenParser.parseBoard("RNBQKBNRP/8/8/8/8/8/8/8");
+            assertNotNull(board);
+        } catch (Exception e) {
+            fail("col>=8; should prevent ArrayIndexOutOfBounds: " + e);
+        }
+    }
+
+    @Test
+    public void parseBoardRowOverflow() {
+        try {
+            String[][] board = FenParser.parseBoard("8/8/8/8/8/8/8/8/r7");
+            assertNotNull(board);
+        } catch (Exception e) {
+            fail("row>=8; should prevent ArrayIndexOutOfBounds: " + e);
+        }
+    }
+
     // ====================================================================
     // parseInteger
     // ====================================================================
 
     @Test
-    public void parseInteger_validNumericString_returnsInt() {
+    public void parseIntValidNumericString() {
         assertEquals(42, FenParser.parseInteger("42"));
     }
 
     @Test
-    public void parseInteger_nonNumericString_returnsZero() {
+    public void parseIntNonNumericString() {
         assertEquals(0, FenParser.parseInteger("abc"));
     }
 
@@ -85,9 +112,14 @@ public class FENParserTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void parseMoveCounter_numericString_returnsDouble() {
+    public void parseMoveCounterNumericString() {
         Double result = FenParser.parseMoveCounter("5");
         assertEquals(5.0, result, 0.001);
+    }
+
+    @Test
+    public void parseMoveCounterInvalidString() {
+        assertEquals(Double.valueOf(0.0), FenParser.parseMoveCounter("abc"));
     }
 
     // ====================================================================
@@ -95,12 +127,12 @@ public class FENParserTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void fenRoundTrip_startPosition_boardSegmentMatches() {
+    public void fenRoundTripStartPosition() {
         String originalFen = FEN_START;
         TestDouble game = TestDouble.fromFen(originalFen);
         String exportedFen = game.getBoard().getFen();
 
-        // The exported board segment (before first space) must match the original
+        // The exported board segment must match the original
         String originalBoard = originalFen.split(" ")[0];
         String exportedBoard = exportedFen.split(" ")[0];
         assertEquals("Board segment of exported FEN should match original",
@@ -108,7 +140,7 @@ public class FENParserTest extends ChessBaseTest {
     }
 
     @Test
-    public void fenRoundTrip_playerToken_whiteToMove() {
+    public void fenRoundTripPlayerTokenWhiteToMove() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         String fen = game.getBoard().getFen();
         // second token is current player
@@ -116,7 +148,7 @@ public class FENParserTest extends ChessBaseTest {
     }
 
     @Test
-    public void fenRoundTrip_kingsOnlyPosition_boardMatches() {
+    public void fenRoundTripKingsOnlyPosition() {
         String fen = FEN_KINGS_ONLY;
         TestDouble game = TestDouble.fromFen(fen);
         String exported = game.getBoard().getFen();
@@ -127,7 +159,7 @@ public class FENParserTest extends ChessBaseTest {
     }
 
     @Test
-    public void fenRoundTrip_promotionPosition_boardMatches() {
+    public void fenRoundTripPromotionPosition() {
         TestDouble game = TestDouble.fromFen(FEN_PROMOTION);
         String exported = game.getBoard().getFen();
         String originalBoard = FEN_PROMOTION.split(" ")[0];
@@ -135,24 +167,73 @@ public class FENParserTest extends ChessBaseTest {
         assertEquals(originalBoard, exportedBoard);
     }
 
+    @Test
+    public void getBoardMixedRankWithLeadingGap() {
+        TestDouble game = TestDouble.fromFen("3r4/8/8/8/8/8/8/4K3 w - - 0 1");
+        String fen = game.getBoard().getFen();
+        assertTrue(fen.startsWith("3r"));
+    }
+
+    @Test
+    public void getBoardRankEndingWithEmptySquares() {
+        TestDouble game = TestDouble.fromFen("r7/8/8/8/8/8/8/4K3 w - - 0 1");
+        String fen = game.getBoard().getFen();
+        assertTrue(fen.startsWith("r7"));
+    }
+
+    @Test
+    public void getPlayerWhiteTurnReturnsW() {
+        TestDouble game = TestDouble.fromFen(FEN_START);
+        assertEquals("w", FenParser.getPlayer(game.getBoard()));
+    }
+
     // ====================================================================
     // Castling FEN token
     // ====================================================================
 
     @Test
-    public void fenCastling_startPosition_allCastlingAvailable() {
+    public void fenCastlingStartPosition() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         String castling = FenParser.getCastling(game.getBoard());
-        assertTrue("KQkq or subset expected",
-                castling.contains("K") && castling.contains("Q")
+        assertTrue(castling.contains("K") && castling.contains("Q")
                         && castling.contains("k") && castling.contains("q"));
     }
 
     @Test
-    public void fenCastling_kingsOnly_noCastling() {
+    public void fenCastlingKingsOnly() {
         TestDouble game = TestDouble.fromFen(FEN_KINGS_ONLY);
         String castling = FenParser.getCastling(game.getBoard());
         assertEquals("No castling available", "-", castling);
+    }
+
+    @Test
+    public void parseCastlingNull() {
+        TestDouble game = TestDouble.fromFen(FEN_KINGS_ONLY);
+        try {
+            FenParser.parseCastling(null, game.getBoard());
+        } catch (Exception e) {
+            fail("null cas should skip body: " + e);
+        }
+    }
+
+    @Test
+    public void parseCastlingDefault() {
+        TestDouble game = TestDouble.fromFen(FEN_START);
+        try {
+            FenParser.parseCastling("KQkq", game.getBoard());
+        } catch (Exception e) {
+            fail("KQkq should skip body: " + e);
+        }
+    }
+
+    @Test
+    public void parseCastlingPartialCastling() {
+        TestDouble game = TestDouble.fromFen(FEN_START);
+        try {
+            FenParser.parseCastling("Kq", game.getBoard());
+        } catch (Exception e) {
+            fail("Should not throw on partial castling string: " + e);
+        }
     }
 
     // ====================================================================
@@ -160,19 +241,40 @@ public class FENParserTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void fenPassing_noPassing_returnsDash() {
+    public void fenPassingNoPassing() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         String passing = FenParser.getPassing(game.getBoard());
         assertEquals("-", passing);
     }
 
     @Test
-    public void fenPassing_enPassantAvailable_returnsSquare() {
-        // FEN_EN_PASSANT has pawn on e5 with black pawn on d5 having just moved
+    public void fenPassingEnPassantAvailable() {
         TestDouble game = TestDouble.fromFen(FEN_EN_PASSANT);
         String passing = FenParser.getPassing(game.getBoard());
         // en-passant target square is d6
         assertFalse("En passant square should not be '-'", "-".equals(passing));
+    }
+
+    @Test
+    public void fenPassingRow3Branch() {
+        assertNull(FenParser.parsePassing("e3", new LinkedList<>(), new LinkedList<>()));
+    }
+
+    @Test
+    public void parsePassingRow6Branch() {
+        assertNull(FenParser.parsePassing("e6", new LinkedList<>(), new LinkedList<>()));
+    }
+
+    @Test
+    public void parsePassingInvalidRow() {
+        assertNull(FenParser.parsePassing("e4", new LinkedList<>(), new LinkedList<>()));
+    }
+
+    @Test
+    public void getPassingWhitePawn() {
+        TestDouble game = TestDouble.fromFen(FEN_EN_PASSANT);
+        String passing = FenParser.getPassing(game.getBoard());
+        assertFalse("-".equals(passing));
     }
 
     // ====================================================================
@@ -180,26 +282,16 @@ public class FENParserTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void fenCountdown_startPosition_returnsZero() {
+    public void fenCountdownStartPositionReturnsZero() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         String countdown = FenParser.getCountdown(game.getBoard());
         assertEquals("0", countdown);
     }
 
     @Test
-    public void fenMoveCount_startPosition_returnsOne() {
+    public void fenMoveCountStartPositionReturnsOne() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         String moveCount = FenParser.getMoveCount(game.getBoard());
         assertEquals("1", moveCount);
-    }
-
-    // ====================================================================
-    // getPlayer token
-    // ====================================================================
-
-    @Test
-    public void getPlayer_whiteTurn_returnsW() {
-        TestDouble game = TestDouble.fromFen(FEN_START);
-        assertEquals("w", FenParser.getPlayer(game.getBoard()));
     }
 }
