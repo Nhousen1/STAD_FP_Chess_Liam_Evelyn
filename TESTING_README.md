@@ -47,14 +47,14 @@ mvn test
 
 **Expected result:**
 ```
-Tests run: 708, Failures: 0, Errors: 0, Skipped: 3
+Tests run: 737, Failures: 0, Errors: 0, Skipped: 3
 BUILD SUCCESS
 ```
 
 The 3 skipped tests are intentional — they document real bugs found in the SUT:
 - `PgnParserTest#testGetEventEmptyPgnCrashesInGetMetaTag` — crashes SUT with `StringIndexOutOfBoundsException`
 - `PgnParserTest#testParseMovesNullNoException` — crashes SUT with `NullPointerException`
-- `SettingsTest#colorChoice_clickWhiteThenBlack_onlyBlackSelected` — Monocle headless race condition (unrelated to SUT)
+- `SettingsTest#colorChoiceWhiteThenBlackSelected` — UX/UI suggestion; not actual error in interface
 
 ---
 
