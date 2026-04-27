@@ -28,11 +28,11 @@ public class SettingsTest extends ApplicationTest {
     }
 
     // ====================================================================
-    // Component Visibility - settings screen launches and shows expected UI
+    // Settings screen launches and shows expected UI
     // ====================================================================
 
     @Test
-    public void settingsScreen_windowVisible_titleIsCorrect() {
+    public void settingsScreenVisible() {
         // The primary stage title is set in Chess.getSettingsScreen()
         assertEquals("Chess v0.8", robotContext().getWindowFinder()
                 .listWindows().stream()
@@ -42,31 +42,31 @@ public class SettingsTest extends ApplicationTest {
     }
 
     @Test
-    public void settingsScreen_welcomeLabel_visible() {
+    public void welcomeLabelVisible() {
         verifyThat("#welcomeLabel", hasText("WELCOME"));
     }
 
     @Test
-    public void settingsScreen_colorLabel_visible() {
+    public void colorLabelVisible() {
         verifyThat("#colorLabel", hasText("please choose color:"));
     }
 
     @Test
-    public void settingsScreen_whiteRadioButton_selectedByDefault() {
+    public void whiteRadioButtonSelectedByDefault() {
         RadioButton white = lookup("#whiteChoice").query();
         assertNotNull(white);
         assertTrue("White should be selected by default", white.isSelected());
     }
 
     @Test
-    public void settingsScreen_blackRadioButton_notSelectedByDefault() {
+    public void blackRadioButtonNotSelectedByDefault() {
         RadioButton black = lookup("#blackChoice").query();
         assertNotNull(black);
         assertFalse("Black should not be selected by default", black.isSelected());
     }
 
     @Test
-    public void settingsScreen_ruleCheckboxes_allSelectedByDefault() {
+    public void ruleCheckboxesAllSelectedByDefault() {
         CheckBox touched    = lookup("#touchedRuleChoice").query();
         CheckBox enPassant  = lookup("#enPassantRuleChoice").query();
         CheckBox timeout    = lookup("#timeoutRuleChoice").query();
@@ -76,14 +76,14 @@ public class SettingsTest extends ApplicationTest {
     }
 
     @Test
-    public void settingsScreen_modeComboBox_hasThreeOptions() {
+    public void modeComboBoxHasThreeOptions() {
         ComboBox<?> mode = lookup("#modeChoice").query();
         assertNotNull(mode);
         assertEquals("Mode combo should have 3 options", 3, mode.getItems().size());
     }
 
     @Test
-    public void settingsScreen_modeComboBox_defaultIsManualVsAI() {
+    public void modeComboBoxDefaultIsManualVsAI() {
         ComboBox<?> mode = lookup("#modeChoice").query();
         assertNotNull(mode);
         assertTrue("Default mode should be 'You vs AI'",
@@ -91,28 +91,28 @@ public class SettingsTest extends ApplicationTest {
     }
 
     @Test
-    public void settingsScreen_difficultySlider_visible() {
+    public void difficultySliderVisible() {
         Slider slider = lookup("#difficultyChoice").query();
         assertNotNull(slider);
         assertEquals(100.0, slider.getValue(), 0.01);
     }
 
     @Test
-    public void settingsScreen_loadButton_visible() {
+    public void loadButtonVisible() {
         Button load = lookup("#loadButton").query();
         assertNotNull(load);
         assertTrue(load.getText().contains("LOAD"));
     }
 
     @Test
-    public void settingsScreen_startButton_visible() {
+    public void startButtonVisible() {
         Button start = lookup("#startButton").query();
         assertNotNull(start);
         assertEquals("START GAME", start.getText());
     }
 
     @Test
-    public void settingsScreen_loadLabel_defaultText() {
+    public void loadLabelDefaultText() {
         verifyThat("#loadLabel", hasText("nothing loaded"));
     }
 
@@ -121,7 +121,7 @@ public class SettingsTest extends ApplicationTest {
     // ====================================================================
 
     @Test
-    public void colorChoice_clickBlack_blackBecomesSelected() {
+    public void colorChoiceBlackSelected() {
         clickOn("#blackChoice");
         RadioButton black = lookup("#blackChoice").query();
         RadioButton white = lookup("#whiteChoice").query();
@@ -133,7 +133,7 @@ public class SettingsTest extends ApplicationTest {
             "both buttons to appear selected simultaneously — a Monocle rendering race condition. " +
             "The equivalent assertion is covered by colorChoice_clickBlack_blackBecomesSelected.")
     @Test
-    public void colorChoice_clickWhiteThenBlack_onlyBlackSelected() {
+    public void colorChoiceWhiteThenBlackSelected() {
         clickOn("#whiteChoice");
         sleep(150);
         clickOn("#blackChoice");
@@ -146,20 +146,20 @@ public class SettingsTest extends ApplicationTest {
     // ====================================================================
 
     @Test
-    public void ruleCheckbox_clickTouched_toggesToOff() {
+    public void ruleCheckboxClickTouchedToOff() {
         clickOn("#touchedRuleChoice");
         CheckBox touched = lookup("#touchedRuleChoice").query();
         assertFalse("Touched/moved rule should be toggled off", touched.isSelected());
     }
 
     @Test
-    public void ruleCheckbox_clickEnPassant_togglesToOff() {
+    public void ruleCheckboxClickEnPassantTogglesToOff() {
         clickOn("#enPassantRuleChoice");
         assertFalse(((CheckBox) lookup("#enPassantRuleChoice").query()).isSelected());
     }
 
     @Test
-    public void ruleCheckbox_clickTimeout_togglesToOff() {
+    public void ruleCheckboxClickTimeoutTogglesToOff() {
         clickOn("#timeoutRuleChoice");
         assertFalse(((CheckBox) lookup("#timeoutRuleChoice").query()).isSelected());
     }
@@ -169,7 +169,7 @@ public class SettingsTest extends ApplicationTest {
     // ====================================================================
 
     @Test
-    public void modeChoice_selectManualOnly_updatesComboBox() {
+    public void modeChoiceSelectManualOnly() {
         clickOn("#modeChoice");
         // Select "You vs your 'friend'" (MANUAL_ONLY)
         clickOn("You vs your 'friend'");
@@ -178,7 +178,7 @@ public class SettingsTest extends ApplicationTest {
     }
 
     @Test
-    public void modeChoice_selectAIOnly_updatesComboBox() {
+    public void modeChoiceSelectAIOnly() {
         clickOn("#modeChoice");
         clickOn("AI only");
         ComboBox<?> mode = lookup("#modeChoice").query();
@@ -190,7 +190,7 @@ public class SettingsTest extends ApplicationTest {
     // ====================================================================
 
     @Test
-    public void startButton_click_navigatesToGameBoard() {
+    public void startButtonNavigatesToGameBoard() {
         clickOn("#startButton");
         // After start, the boardGrid should exist in the scene
         sleep(500); // allow scene transition
@@ -199,7 +199,7 @@ public class SettingsTest extends ApplicationTest {
     }
 
     @Test
-    public void startButton_withManualOnlyMode_launchesGame() {
+    public void startButtonWithManualOnlyModeLaunchesGame() {
         clickOn("#modeChoice");
         clickOn("You vs your 'friend'");
         clickOn("#startButton");
@@ -212,7 +212,7 @@ public class SettingsTest extends ApplicationTest {
     // ====================================================================
 
     @Test
-    public void loadDialog_invalidFen_showsErrorLabel() {
+    public void loadDialogInvalidFenShowsError() {
         clickOn("#loadButton");
         sleep(300);
         // Type garbage into the FEN field (it's a TextField with prompt text)
@@ -227,7 +227,7 @@ public class SettingsTest extends ApplicationTest {
     }
 
     @Test
-    public void loadDialog_cancelButton_labelUnchanged() {
+    public void loadDialogCancelButton() {
         clickOn("#loadButton");
         sleep(300);
         clickOn("Cancel");
@@ -236,7 +236,7 @@ public class SettingsTest extends ApplicationTest {
     }
 
     @Test
-    public void loadDialog_validFen_labelShowsLoaded() {
+    public void loadDialogValidFenShowsLoaded() {
         clickOn("#loadButton");
         sleep(300);
         clickOn(".text-field");
