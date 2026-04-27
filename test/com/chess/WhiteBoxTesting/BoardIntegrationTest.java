@@ -28,11 +28,10 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void executeMove_pawnAdvance_pieceChangesField() {
+    public void executePawnAdvanceChangesBoard() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
 
-        // Find the e2->e4 move
         Piece pawn = pieceAt(board, "e2");
         assertNotNull(pawn);
 
@@ -40,10 +39,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
         Move e4move = findMove(moves, "e4");
         assertNotNull("e4 move should exist", e4move);
 
-        // Execute it manually (bypassing GUI lock)
         pawn.getField().removePiece(false);
-        // Use board's public redoMove/undoMove cycle to perform cleanly;
-        // instead, directly call move.execute for whitebox coverage
         e4move.execute(board);
 
         Piece afterMove = pieceAt(board, "e4");
@@ -53,7 +49,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     }
 
     @Test
-    public void executeMove_capture_removesVictimFromBoard() {
+    public void executeCaptureRemovesVictimFromBoard() {
         // White rook can capture a black pawn
         String fen = "k7/p7/8/8/8/8/8/R6K w - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
@@ -62,7 +58,6 @@ public class BoardIntegrationTest extends ChessBaseTest {
         Piece rook = pieceAt(board, "a1");
         assertNotNull(rook);
 
-        // Rook climbs to a7 to capture
         List<Move> moves = rook.getMoves();
         Move capture = findMove(moves, "a7");
         assertNotNull("Rook should be able to reach a7", capture);
@@ -72,7 +67,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
 
         assertNotNull("Rook should be on a7", pieceAt(board, "a7"));
         assertTrue(pieceAt(board, "a7") instanceof RookPiece);
-        // Black pawn on a7 should be gone
+
         assertFalse("Captured black pawn should not be in black pieces list",
                 board.getPieces(true).stream()
                         .anyMatch(p -> p instanceof PawnPiece
@@ -84,7 +79,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void undoMove_afterPawnAdvance_boardRestored() {
+    public void undoMoveAfterPawnAdvance() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
 
@@ -109,7 +104,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void castling_kingSide_kingAndRookMoveCorrectly() {
+    public void castlingKingSide() {
         TestDouble game = TestDouble.fromFen(FEN_CASTLING_AVAILABLE);
         Board board = game.getBoard();
 
@@ -118,7 +113,6 @@ public class BoardIntegrationTest extends ChessBaseTest {
         List<Move> castlingMoves = king.getCastlingMoves();
         assertNotNull(castlingMoves);
 
-        // Find king-side castling (O-O)
         Move kingSide = castlingMoves.stream()
                 .filter(m -> m.getNotation().contains("O-O") && !m.getNotation().contains("O-O-O"))
                 .findFirst().orElse(null);
@@ -138,7 +132,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void enPassant_passedPawnRemoved_afterCapture() {
+    public void enPassantPassedPawnRemovedAfterCapture() {
         TestDouble game = TestDouble.fromFen(FEN_EN_PASSANT);
         Board board = game.getBoard();
 
@@ -155,7 +149,6 @@ public class BoardIntegrationTest extends ChessBaseTest {
         whitePawn.getField().removePiece(false);
         epMove.execute(board);
 
-        // The captured black pawn (d5) should be gone
         assertNull("Black pawn on d5 should be captured via en passant", pieceAt(board, "d5"));
     }
 
@@ -164,9 +157,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void check_kingInCheck_validMovesMustEscapeCheck() {
-        // White queen on h5 gives check to black king on e8 (black's turn)
-        // Simplified position: black king e8, white queen h5, white king a1
+    public void kingInCheck() {
         String fen = "4k3/8/8/7Q/8/8/8/K7 b - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
         Board board = game.getBoard();
@@ -179,7 +170,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
                 .reduce(new java.util.ArrayList<>(),
                         (acc, p) -> { acc.addAll(p.getMoves()); return acc; },
                         (a, b) -> { a.addAll(b); return a; });
-        // At minimum the king must be able to flee (should have 1+ moves)
+        // At minimum the king must be able to flee
         assertFalse("Black should have at least one legal move to escape check",
                 currentMoves.isEmpty());
     }
@@ -189,15 +180,13 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void checkmate_scholarsMateFen_noLegalMovesForLoser() {
-        // FEN where white is already checkmated
+    public void checkmateNoLegalMovesForLoser() {
         TestDouble game = TestDouble.fromFen(FEN_CHECKMATE_WHITE);
         Board board = game.getBoard();
 
-        // validateBoard should detect the game is over (returns true)
+        // validateBoard should detect the game is over
         boolean ended = board.validateBoard();
         // The board should have no current moves for white
-        // (game ended signal)
         assertTrue("validateBoard should return true for checkmate position", ended);
     }
 
@@ -206,7 +195,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void stalemate_stalematePosition_validateBoardReturnsTrueOrNoMoves() {
+    public void stalematePosition() {
         TestDouble game = TestDouble.fromFen(FEN_STALEMATE);
         Board board = game.getBoard();
 
@@ -220,7 +209,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void promotion_whitePawnReachesRank8_becomesQueen() {
+    public void whitePawnBecomesQueen() {
         TestDouble game = TestDouble.fromFen(FEN_PROMOTION);
         Board board = game.getBoard();
 
@@ -246,8 +235,8 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void fiftyMoveRule_countdownOver100_boardEndsGame() {
-        // Must use a setting where timeout IS enabled (settingFromFen calls setTimeout(false))
+    public void fiftyMoveRuleEndsGame() {
+        // Must use a setting where timeout is ENABLED
         com.chess.model.Setting s = new com.chess.model.Setting(
                 true, com.chess.model.Mode.MANUAL_ONLY,
                 com.chess.model.PieceValues.SUPERSUPERHARD,
@@ -256,13 +245,13 @@ public class BoardIntegrationTest extends ChessBaseTest {
         String[] parts = FEN_KINGS_ONLY.split(" ");
         s.setFenBoard(com.chess.root.FenParser.parseBoard(parts[0]));
         s.setCompleteFen(parts);
-        // timeout remains true (default) so countdown check is active
+
         TestDouble game = new TestDouble(s);
         Board board = game.getBoard();
 
         board.setCountdown(102);
         boolean ended = board.validateBoard();
-        assertTrue("50-move rule should end the game when countdown > 100", ended);
+        assertTrue(ended);
     }
 
     // ====================================================================
@@ -270,8 +259,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void capture_blackPieceCount_decreasesAfterCapture() {
-        // White rook a1, black rook a8, kings
+    public void pieceCountDecreasesAfterCapture() {
         String fen = "r6k/8/8/8/8/8/8/R6K w - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
         Board board = game.getBoard();
@@ -296,7 +284,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void getKing_returnsCorrectKing() {
+    public void getKingReturnsCorrectKing() {
         TestDouble game = TestDouble.fromFen(FEN_START);
         Board board = game.getBoard();
 
@@ -316,8 +304,7 @@ public class BoardIntegrationTest extends ChessBaseTest {
     // ====================================================================
 
     @Test
-    public void isPieceEndangered_kingUnderAttack_returnsTrue() {
-        // Black king on e8, white queen on e1 – queen directly threatens e8
+    public void kingUnderAttackReturnsTrue() {
         String fen = "4k3/8/8/8/8/8/8/4QK2 b - - 0 1";
         TestDouble game = TestDouble.fromFen(fen);
         Board board = game.getBoard();
@@ -326,18 +313,16 @@ public class BoardIntegrationTest extends ChessBaseTest {
         assertNotNull(blackKing);
 
         boolean endangered = board.isPieceEndangered(blackKing, board.getPieces(false));
-        assertTrue("Black king on e8 threatened by white queen on e1", endangered);
+        assertTrue(endangered);
     }
 
     @Test
-    public void isPieceEndangered_safeKing_returnsFalse() {
+    public void safeKingReturnsFalse() {
         TestDouble game = TestDouble.fromFen(FEN_KINGS_ONLY);
         Board board = game.getBoard();
 
         Piece whiteKing = board.getKing(false);
-        // Black king is far away and cannot reach white king in one move
         boolean endangered = board.isPieceEndangered(whiteKing, board.getPieces(true));
-        assertFalse("White king should not be endangered in FEN_KINGS_ONLY initial position",
-                endangered);
+        assertFalse(endangered);
     }
 }
